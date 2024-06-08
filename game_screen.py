@@ -39,8 +39,8 @@ class GameScreen:
 
         self.start_button = pygame.Rect(self.settings.screen_width // 2 - 50, self.settings.screen_height - 50, 100, 30)
 
-
         self.is_gameover = False
+        self.winner = None
 
     def reset(self):
         self.player_grid = [[0] * self.settings.grid_size for _ in range(self.settings.grid_size)]
@@ -57,8 +57,8 @@ class GameScreen:
     def handle_events(self, events):
         for event in events:
             if self.is_gameover:
-                if event.type == pygame.KEYDOWN:
-                    self.reset()
+                self.reset()
+                return "gameover"
 
             if event.type == pygame.QUIT:
                 return "quit"
@@ -90,7 +90,7 @@ class GameScreen:
                             # wait for 1 second before AI attacks
                             self.draw()
                             pygame.display.flip()
-                            time.sleep(1)
+                            time.sleep(.3)
                             self.ai_attack()
                         
                         # print("Player Grid")
@@ -108,7 +108,6 @@ class GameScreen:
                 if event.key == pygame.K_r and not self.game_started:
                     self.placing_horizontal = not self.placing_horizontal
 
-
     def get_cell(self, mouse_pos, start_x, start_y):
         x, y = mouse_pos
         if start_x <= x < start_x + self.settings.grid_size * self.settings.cell_size and start_y <= y < start_y + self.settings.grid_size * self.settings.cell_size:
@@ -116,7 +115,6 @@ class GameScreen:
             row = (y - start_y) // self.settings.cell_size
             return row, col
         return None
-
 
     def can_place_ship(self, grid, row, col, size, horizontal):
         if horizontal:
@@ -197,9 +195,11 @@ class GameScreen:
         if self.ai_grid[row][col] == 0 or self.ai_grid[row][col] == -6:
             self.ai_grid[row][col] = -6
             print("Player missed")
+            
         elif self.ai_grid[row][col] > 0 and self.ai_grid[row][col] != -6:
             self.ai_grid[row][col] = - self.ai_grid[row][col]
             print("Player hit")
+
         self.check_winner()
 
     def check_winner(self):
@@ -207,10 +207,13 @@ class GameScreen:
         ai_ships_left = any(cell > 0 for row in self.ai_grid for cell in row)
         if not player_ships_left:
             print("AI wins")
+            self.winner = "AI"
             self.is_gameover = True
         elif not ai_ships_left:
             print("Player wins")
+            self.winner = "Player"
             self.is_gameover = True
+        
 
     def draw_grid(self, start_x, start_y, grid, player_ships, flag, current_ship_info=None, ship_pos=None, horizontal=True):
         for row in range(self.settings.grid_size):
@@ -220,6 +223,7 @@ class GameScreen:
 
                 if grid[row][col] != -6 and grid[row][col] < 0:
                     pygame.draw.rect(self.screen, (255, 0, 0), rect)
+
                 elif grid[row][col] == -6:
                     pygame.draw.rect(self.screen, (255, 255, 0), rect)
         
