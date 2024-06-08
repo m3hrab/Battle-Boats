@@ -37,7 +37,7 @@ class GameScreen:
         self.game_started = False
         self.player_turn = False
 
-        self.start_button = pygame.Rect(self.settings.screen_width // 2 - 50, self.settings.screen_height - 50, 100, 30)
+        self.start_button = pygame.Rect(self.settings.screen_width // 2 - 50, self.settings.screen_height - 50, 92, 34)
 
         self.is_gameover = False
         self.winner = None
@@ -47,6 +47,11 @@ class GameScreen:
         self.fire_sprites = [pygame.transform.scale(pygame.image.load(f'assets/images/fire_sprites/{i}.png'), (self.settings.cell_size, self.settings.cell_size)) for i in range(1, 5)]
         self.water_sprites = [pygame.transform.scale(pygame.image.load(f'assets/images/water_sprites/{i}.png'), (self.settings.cell_size, self.settings.cell_size)) for i in range(1, 5)]
         
+
+        # Texts 
+        self.text1 = self.settings.button_font.render("Your Fleet", True, (255, 255, 255))
+        self.text2 = self.settings.button_font.render("Enemy's Fleet", True, (255, 255, 255))
+        self.button_text = self.settings.button_font.render("START GAME", True, (255, 255, 255))
 
     def reset(self):
         self.player_grid = [[0] * self.settings.grid_size for _ in range(self.settings.grid_size)]
@@ -267,7 +272,9 @@ class GameScreen:
                 elif grid[row][col] == -6:
                     # draw the transparent blue overlay
                     overlay = pygame.Surface((self.settings.cell_size, self.settings.cell_size), pygame.SRCALPHA)
-                    overlay.fill((0, 255, 0, 128))  # Add some transparency low    
+                    # overlay.fill((0, 0, 150, 128))  # Add some transparency low    
+                    # light blue
+                    overlay.fill((135, 206, 250, 128))
                     self.screen.blit(overlay, (start_x + col * self.settings.cell_size, start_y + row * self.settings.cell_size))    
         if flag:
             for ship_name, ship_size, (row, col), ship_horizontal in player_ships:
@@ -355,8 +362,12 @@ class GameScreen:
                 self.screen.blit(ship_image, (start_x + col * self.settings.cell_size, start_y + row * self.settings.cell_size))
                 self.screen.blit(overlay, (start_x + col * self.settings.cell_size, start_y + row * self.settings.cell_size))
 
+        # Draw the text at bottom center of each grid
+        self.screen.blit(self.text1, (self.settings.player_grid_start_x + self.settings.grid_size * self.settings.cell_size // 2 - 40, self.settings.player_grid_start_y + self.settings.grid_size * self.settings.cell_size + 10))
+        self.screen.blit(self.text2, (self.settings.ai_grid_start_x + self.settings.grid_size * self.settings.cell_size // 2 - 40, self.settings.ai_grid_start_y + self.settings.grid_size * self.settings.cell_size + 10))
+
     def draw(self):
-        self.screen.fill((135, 206, 235))
+        self.screen.blit(self.bg, (0, 0))
         current_ship = self.ships[self.current_ship_index] if self.current_ship_index < len(self.ships) else None
         cell = self.get_cell(pygame.mouse.get_pos(), self.settings.player_grid_start_x, self.settings.player_grid_start_y)
         self.draw_grid(self.settings.player_grid_start_x, self.settings.player_grid_start_y, self.player_grid, self.player_ships, True, current_ship, cell, self.placing_horizontal)
@@ -364,7 +375,4 @@ class GameScreen:
 
         if not self.game_started:
             pygame.draw.rect(self.screen, (0, 255, 0) if self.current_ship_index >= len(self.ships) else (255, 0, 0), self.start_button)
-            font = pygame.font.Font(None, 36)
-            text = font.render("Start", True, (0, 0, 0))
-            text_rect = text.get_rect(center=self.start_button.center)
-            self.screen.blit(text, text_rect)
+            self.screen.blit(self.button_text, (self.settings.screen_width // 2 - 40, self.settings.screen_height - 45))

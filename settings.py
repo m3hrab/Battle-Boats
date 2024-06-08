@@ -1,3 +1,5 @@
+import pygame 
+
 class Settings():
 
     def __init__(self):
@@ -6,10 +8,14 @@ class Settings():
         self.screen_height = 540
         self.caption = "Battle Boats"
 
+        # Fonts 
+        self.text_font = pygame.font.Font("assets/fonts/Anton-Regular.ttf", 36)
+        self.button_font = pygame.font.Font("assets/fonts/Anton-Regular.ttf", 16)
+
         # Game settings
         self.grid_size = 10
-        self.cell_size = 38
-        self.margin = 60
+        self.cell_size = 35
+        self.margin = 70
         self.player_grid_start_x = self.margin
         self.player_grid_start_y = self.margin + 20
 
