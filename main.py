@@ -20,7 +20,7 @@ def run():
     game_screen = GameScreen(screen, settings)
     gameover_screen = GameOverScreen(screen, settings)
     
-    current_screen = start_screen
+    current_screen = game_screen
 
     while True:
         

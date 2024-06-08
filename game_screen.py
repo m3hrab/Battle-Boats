@@ -41,6 +41,12 @@ class GameScreen:
 
         self.is_gameover = False
         self.winner = None
+        self.flag = False
+
+        # Load fire and water drop sprites and transform them to the cell size
+        self.fire_sprites = [pygame.transform.scale(pygame.image.load(f'assets/images/fire_sprites/{i}.png'), (self.settings.cell_size, self.settings.cell_size)) for i in range(1, 5)]
+        self.water_sprites = [pygame.transform.scale(pygame.image.load(f'assets/images/water_sprites/{i}.png'), (self.settings.cell_size, self.settings.cell_size)) for i in range(1, 5)]
+        
 
     def reset(self):
         self.player_grid = [[0] * self.settings.grid_size for _ in range(self.settings.grid_size)]
@@ -53,6 +59,8 @@ class GameScreen:
         self.game_started = False
         self.player_turn = False
         self.is_gameover = False
+
+
         
     def handle_events(self, events):
         for event in events:
@@ -176,12 +184,22 @@ class GameScreen:
             if self.player_grid[row][col] == 0 or self.player_grid[row][col] == -6:
                 self.player_grid[row][col] = -6
                 print("AI missed")
+                flag = False
                 break
             elif self.player_grid[row][col] != 0 and self.player_grid[row][col] != -6:
                 self.player_grid[row][col] = -self.player_grid[row][col]
                 print("AI hit")
                 # self.player_ships.remove((self.player_grid[row][col], 0, (row, col), True))
+                flag = True
                 break
+        
+        if flag:
+            self.draw_animation((row, col), self.fire_sprites, True)
+        else:
+            self.draw_animation((row, col), self.water_sprites, True)
+
+
+                
         self.check_winner()
         self.player_turn = True
 
@@ -195,12 +213,16 @@ class GameScreen:
         if self.ai_grid[row][col] == 0 or self.ai_grid[row][col] == -6:
             self.ai_grid[row][col] = -6
             print("Player missed")
+            self.draw_animation(cell, self.water_sprites, False)
             
         elif self.ai_grid[row][col] > 0 and self.ai_grid[row][col] != -6:
             self.ai_grid[row][col] = - self.ai_grid[row][col]
             print("Player hit")
+            self.draw_animation(cell, self.fire_sprites, False)
 
         self.check_winner()
+
+    
 
     def check_winner(self):
         player_ships_left = any(cell > 0 for row in self.player_grid for cell in row)
@@ -213,7 +235,22 @@ class GameScreen:
             print("Player wins")
             self.winner = "Player"
             self.is_gameover = True
+
+    def draw_animation(self, cell, sprites, ai_attack=False):
         
+        row, col = cell
+        if ai_attack:
+            x = self.settings.player_grid_start_x + col * self.settings.cell_size
+            y = self.settings.player_grid_start_y + row * self.settings.cell_size
+        else:
+            x = self.settings.ai_grid_start_x + col * self.settings.cell_size
+            y = self.settings.ai_grid_start_y + row * self.settings.cell_size
+
+        for sprite in sprites:
+            self.draw()
+            self.screen.blit(sprite, (x, y))
+            time.sleep(.1)
+            pygame.display.flip()
 
     def draw_grid(self, start_x, start_y, grid, player_ships, flag, current_ship_info=None, ship_pos=None, horizontal=True):
         for row in range(self.settings.grid_size):
@@ -222,11 +259,16 @@ class GameScreen:
                 pygame.draw.rect(self.screen, (255, 255, 255), rect, 1)
 
                 if grid[row][col] != -6 and grid[row][col] < 0:
-                    pygame.draw.rect(self.screen, (255, 0, 0), rect)
+                    # draw the transparent red overlay
+                    overlay = pygame.Surface((self.settings.cell_size, self.settings.cell_size), pygame.SRCALPHA)
+                    overlay.fill((255, 0, 0, 200))  # Add some transparency
+                    self.screen.blit(overlay, (start_x + col * self.settings.cell_size, start_y + row * self.settings.cell_size))
 
                 elif grid[row][col] == -6:
-                    pygame.draw.rect(self.screen, (255, 255, 0), rect)
-        
+                    # draw the transparent blue overlay
+                    overlay = pygame.Surface((self.settings.cell_size, self.settings.cell_size), pygame.SRCALPHA)
+                    overlay.fill((0, 255, 0, 128))  # Add some transparency low    
+                    self.screen.blit(overlay, (start_x + col * self.settings.cell_size, start_y + row * self.settings.cell_size))    
         if flag:
             for ship_name, ship_size, (row, col), ship_horizontal in player_ships:
                 ship_image = self.ship_images[ship_name]['horizontal' if ship_horizontal else 'vertical']
